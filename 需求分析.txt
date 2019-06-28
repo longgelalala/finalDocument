@@ -1,0 +1,67 @@
+一、安装版本java esl连接freeswitch发送拨打电话-安装篇
+
+1.下载安装
+
+  a.windows环境下载安装http://files.freeswitch.org/windows/installer/x64/
+
+  b.linux环境下安装https://freeswitch.org/confluence/display/FREESWITCH/CentOS+7+and+RHEL+7
+
+2.java 中使用java esl开发包连接freeswitch
+ http://wiki.freeswitch.org/wiki/Java_ESL_Client
+
+二、整个项目暂时的需求分析
+我在一个做呼叫中心的项目中工作，该项目主要实现邮件、聊天和呼叫查询的功能。
+
+          需求如下：
+
+          1、 客户来电后，FreeSwitch作为自动话务台处理该路呼叫；
+
+          2、 客户通过菜单做出选择。他的呼叫将被保持，同时系统从数据库进行查询；
+
+          3、 查询结果将显示给客服人员；
+
+          4、 某一客服人员点击该条目，将显示正在保持中的线路。同时进行点击呼叫；
+
+          5、 客服人员和客户进行通话。
+
+三、暂时整个项目的具体思路
+          请教各位怎么通过JAVA实现上述功能？
+如果你不使用mod_callcenter模块，而要建立自己的队列，你可以这样做：
+
+           1） 使用 ivr 程序 播放语音菜单；
+
+           2） 用户选择某项后，转移当前通话到一个JAVA 应用程序（该程序通过 ESL IN OUTBOUND SOCKET 的模式和FreeSwitch进行交互）；
+
+           3） JAVA 应用程序在数据库中根据UUID 插入一条记录，同时PARK()当前通话；
+
+           4） 客服代表的应用程序不断轮询数据库，并且显示当前保持的通话；
+
+           5） 客服代表点击那条呼叫记录。这个动作将给 JAVA APP 发送一条命令。包括用户通话的UUID和客服代表的终端信息；
+
+           6） JAVA APP 接收到该命令后，执行 bridge 命令 ，将两路通话进行桥接。一切OK！
+
+四、基本功能
+已经开发完成基于Freeswitch软交换的呼叫中心
+
+包含IVR、ACD、录音、播报坐席工号、评分功能
+
+坐席迁入、签出，保持、转移、接话、呼出、班长监听、强插、强拆、拦截等功能
+
+ACD： 坐席自动分配，分机自动分配
+
+转移：转移到坐席，转移到分机，转移到外线
+
+五、参考资料
+
+1、用freeswitch建立呼叫中心系统的经验https://blog.csdn.net/Dreamcode/article/details/8460593
+    目前国内利用开源系统开发呼叫中心大部分采用了Asterisk系统。Asterisk进入 较早，相关资料和开源代码较多，通信技术人员利用文档就可以搭建一套简易呼叫中心。
+随着Asterisk核心技术人员另起炉灶开发freeswitch系统，原asterisk上一些天生的缺陷也引起人们的注意，比如呼叫并发处理能力、呼叫通道线程管理方式的弊病。
+    Freeswitch不仅克服了以上缺陷，而且目前众多语音板块厂商也提供了支持，国内外开发使用者逐渐增多。但freeswitch系统中文资料少，实际经验资料少，给开发者带来障碍。我公司利用freeswitch开发尽三年时间，从1.0.6到最新版本，积累了一些见解，现于此和业内同行分享。
+1、  目前大部分终端、平台出于带宽考虑，首选g729或g723编码，而freeswitch的呼叫中心媒体功能必须使用这两个编码的transcoding方式。购买硬件解码卡是效果最好的方式，但价值不菲。利用计算机自身实现编码转换是一种可行的低成本方案，但需要自己编译g729ab或g723编码支持transcode。笔者建议呼叫中心系统最好采取g711编码，省去了上述麻烦。
+2、  随着freeswitch版本不同，mysql和callcener模块的一些命令、函数存在差异，当你升级freeswitch后可能会发现原先开发使用正常的一些功能不能用了。建议在一个固定的版本下开发。
+3、  版本不同对板卡的支持也不同，比如1.0.7是较为稳定成熟版本，但在模型数字中继卡支持上出现问题。这个时候建议更换高版本。
+4、  Callcenter模块存推出后数据会挂死，必须强制kill，需要修改编译callcenter模块。
+5、  Mysql和php开发版本需固定。
+freeswitch的呼叫中心模块
+https://blog.csdn.net/jiaojian8063868/article/details/78977586
+
